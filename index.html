@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>¿Cuál es tu mesa?</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-dim: rgba(201,168,76,0.15);
+    --dark: #0d0d0d;
+    --dark2: #141414;
+    --dark3: #1c1c1c;
+    --text: #f0ead6;
+    --text-muted: #7a7060;
+    --green: #4caf7d;
+    --red: #e05c5c;
+  }
+
+  html, body {
+    min-height: 100%;
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100svh;
+    padding: 0 0 48px;
+    background:
+      radial-gradient(ellipse 80% 40% at 50% -10%, rgba(201,168,76,0.12) 0%, transparent 70%),
+      var(--dark);
+  }
+
+  /* ── Header ── */
+  header {
+    width: 100%;
+    text-align: center;
+    padding: 52px 24px 32px;
+    position: relative;
+  }
+
+  .ornament {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    opacity: 0.55;
+  }
+  .ornament-line {
+    height: 1px;
+    width: 56px;
+    background: linear-gradient(90deg, transparent, var(--gold));
+  }
+  .ornament-line.r { background: linear-gradient(90deg, var(--gold), transparent); }
+  .ornament-diamond {
+    width: 6px; height: 6px;
+    background: var(--gold);
+    transform: rotate(45deg);
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 8vw, 3rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--text);
+  }
+  h1 span {
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-weight: 300;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Search card ── */
+  .card {
+    width: calc(100% - 32px);
+    max-width: 480px;
+    background: var(--dark2);
+    border: 1px solid rgba(201,168,76,0.18);
+    border-radius: 20px;
+    padding: 28px 24px 24px;
+    margin-top: 8px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  }
+
+  label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .input-wrap {
+    position: relative;
+  }
+
+  .input-wrap svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+    transition: color 0.2s;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    background: var(--dark3);
+    border: 1.5px solid rgba(201,168,76,0.2);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 400;
+    padding: 14px 14px 14px 44px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+  }
+  input[type="text"]::placeholder { color: var(--text-muted); }
+  input[type="text"]:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+  }
+  input[type="text"]:focus + svg,
+  .input-wrap:focus-within svg { color: var(--gold); }
+
+  /* fix svg order */
+  .input-wrap input { order: 1; }
+  .input-wrap svg { order: 2; }
+
+  .clear-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    display: none;
+    line-height: 0;
+  }
+  .clear-btn.visible { display: block; }
+
+  /* ── Results ── */
+  #results {
+    margin-top: 20px;
+    display: none;
+  }
+  #results.visible { display: block; }
+
+  .result-divider {
+    height: 1px;
+    background: rgba(201,168,76,0.1);
+    margin-bottom: 18px;
+  }
+
+  /* Single match — big reveal */
+  .result-single {
+    text-align: center;
+    animation: fadeUp 0.35s ease both;
+  }
+  .result-single .name {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1rem, 4vw, 1.25rem);
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 16px;
+    line-height: 1.3;
+  }
+  .table-reveal {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--gold-dim);
+    border: 1px solid rgba(201,168,76,0.35);
+    border-radius: 16px;
+    padding: 20px 40px;
+    gap: 4px;
+  }
+  .table-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 500;
+  }
+  .table-number {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3rem, 14vw, 5rem);
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Multiple matches */
+  .result-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: fadeUp 0.3s ease both;
+  }
+  .result-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--dark3);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    animation: fadeUp 0.3s ease both;
+  }
+  .result-item:active { background: rgba(201,168,76,0.08); border-color: rgba(201,168,76,0.3); }
+  .result-item .item-name {
+    font-size: 0.88rem;
+    font-weight: 400;
+    color: var(--text);
+    flex: 1;
+    line-height: 1.3;
+  }
+  .item-table {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--gold);
+    white-space: nowrap;
+    min-width: 32px;
+    text-align: right;
+  }
+  .item-table-label {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    text-align: right;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* No result */
+  .result-empty {
+    text-align: center;
+    padding: 12px 0;
+    animation: fadeUp 0.3s ease both;
+  }
+  .result-empty .emoji { font-size: 2rem; margin-bottom: 8px; }
+  .result-empty p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .result-empty strong { color: var(--text); }
+
+  /* Detail overlay for multi-match tap */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+    padding: 0 16px 24px;
+  }
+  .overlay.open { opacity: 1; pointer-events: all; }
+  .overlay-card {
+    background: var(--dark2);
+    border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 24px 24px 20px 20px;
+    width: 100%;
+    max-width: 480px;
+    padding: 32px 28px 28px;
+    text-align: center;
+    transform: translateY(30px);
+    transition: transform 0.3s cubic-bezier(.2,.8,.4,1);
+  }
+  .overlay.open .overlay-card { transform: translateY(0); }
+  .overlay-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 20px;
+    line-height: 1.3;
+  }
+  .overlay-table-box {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--gold-dim);
+    border: 1px solid rgba(201,168,76,0.35);
+    border-radius: 16px;
+    padding: 18px 48px;
+    gap: 2px;
+    margin-bottom: 24px;
+  }
+  .overlay-table-label { font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); }
+  .overlay-table-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 4rem;
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .overlay-close {
+    background: var(--dark3);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    padding: 12px 24px;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.15s;
+  }
+  .overlay-close:active { background: rgba(255,255,255,0.06); }
+
+  /* Footer */
+  footer {
+    margin-top: 36px;
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="ornament">
+    <div class="ornament-line"></div>
+    <div class="ornament-diamond"></div>
+    <div class="ornament-line r"></div>
+  </div>
+  <h1>¿Cuál es tu<br><span>mesa?</span></h1>
+  <p class="subtitle">Escribe tu nombre para encontrar tu lugar</p>
+</header>
+
+<div class="card">
+  <label for="search">Nombre del invitado</label>
+  <div class="input-wrap">
+    <input
+      type="text"
+      id="search"
+      placeholder="Ej: Juan García..."
+      autocomplete="off"
+      autocorrect="off"
+      autocapitalize="characters"
+      spellcheck="false"
+    >
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <button class="clear-btn" id="clearBtn" aria-label="Limpiar">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <div id="results"></div>
+</div>
+
+<footer>128 invitados &nbsp;·&nbsp; Busca por nombre o apellido</footer>
+
+<!-- Detail overlay -->
+<div class="overlay" id="overlay" role="dialog">
+  <div class="overlay-card">
+    <div class="overlay-name" id="overlayName"></div>
+    <div class="overlay-table-box">
+      <span class="overlay-table-label">Mesa</span>
+      <span class="overlay-table-num" id="overlayTable"></span>
+    </div>
+    <button class="overlay-close" id="overlayClose">Cerrar</button>
+  </div>
+</div>
+
+<script>
+const GUESTS = [{"name": "KELINETH JOHANNA PITTI", "table": 11}, {"name": "GUADALUPE ESILDA CHERIGO", "table": 11}, {"name": "MARTHA EMELDA PENALBA LUMBSDEN", "table": 11}, {"name": "MASIEL RUIZ NUNEZ", "table": 11}, {"name": "NOEL OCTAVIO QUEZADA", "table": 11}, {"name": "JUAN CARLOS ARIAS OSORIO", "table": 3}, {"name": "JUAN GONZALO SIERRA ORTIZ", "table": 4}, {"name": "ANA CAROLINA PEREZ FELIPE", "table": 3}, {"name": "JORGE ANDRES BOTERO SOTO", "table": 4}, {"name": "JOYCELYN AURORA GARCIA SAAVEDRA", "table": 3}, {"name": "ARLEEN DE LOS ANGELES DIAZ VERGARA", "table": 3}, {"name": "TELMA ISABEL CUESTA GALEGO", "table": 3}, {"name": "RICARDO ENRIQUE SAIED MUNOZ", "table": 3}, {"name": "DIEGO FERNANDO GARCIA OCAMPO", "table": 4}, {"name": "JULIANA VANEGAS VALENCIA", "table": 4}, {"name": "AIMEE THALIA SENTMAT PUGA", "table": 4}, {"name": "ANA MELISSA MENA", "table": 4}, {"name": "ALEXANDRA PATRICIA BERMUDEZ RUIDIAZ", "table": 4}, {"name": "CARLOS ANDRES ESCOBAR NUNEZ", "table": 3}, {"name": "CESAR ANDRES LOPEZ QUEZADA", "table": 18}, {"name": "CESAR ANDRES QUEVEDO SANCHEZ", "table": 18}, {"name": "MARCELO PLAVAN", "table": 18}, {"name": "MELISSA LINNETTE ORTEGA MENDIETA", "table": 18}, {"name": "MARCOS ANTONIO SANTOS MARTINEZ", "table": 13}, {"name": "CLAUDIA PATRICIA JUAREZ BARAHONA", "table": 1}, {"name": "DAVID SAMUDIO CASTILLO", "table": 1}, {"name": "ELSA DEL CARMEN JIMENEZ JIMENEZ", "table": 1}, {"name": "ETEL SAIDETT SANCHEZ SAMANIEGO", "table": 1}, {"name": "GILBERTO ANTONIO ZURITA", "table": 1}, {"name": "GISELA ALVAREZ DE SALDANA", "table": 1}, {"name": "JUAN GUILLERMO RIANO ARANGO", "table": 2}, {"name": "KERISHA KIMARA SAMUELS VANHORN", "table": 1}, {"name": "LUANY MONIQUE ULLOA DELGADO", "table": 2}, {"name": "LUIS ANTONIO CABALLERO BONILLA", "table": 2}, {"name": "OLGA HAZERA CASTILLO", "table": 2}, {"name": "RICARDO ADONIRAM MONTENEGRO MOLINA", "table": 2}, {"name": "RICARDO ALBERTO SOLIS", "table": 2}, {"name": "NICOLE MARIE OLLER GOMEZ", "table": 12}, {"name": "RODRIGO RAUL ROCHA ROWE", "table": 12}, {"name": "MELISSA KIESWETTER VILLEGAS DE NIX", "table": 14}, {"name": "JOSE ALEJANDRO SIERRA KIESWETTER", "table": 14}, {"name": "JUAN CARLOS JULIO ESPINOSA", "table": 14}, {"name": "SILVIA PATRICIA CRUZ GODOY DE FUENTES", "table": 14}, {"name": "EDUARDO JOSE SPIEGEL PINZON", "table": 10}, {"name": "GIANCARLO PITTI GOMEZ", "table": 10}, {"name": "IAN PAUL ESCRUCERIA FUENTES", "table": 10}, {"name": "JULISSA KATHERINE MADRID RODRIGUEZ", "table": 10}, {"name": "YESSENIA IVETH BOSQUEZ VASQUEZ", "table": 10}, {"name": "CRISTINA MARIE SANCHEZ SANJUR", "table": 10}, {"name": "MARIA PAULA NAVIA JARAMILLO", "table": 2}, {"name": "HECTOR EMILIO MORALES ALVARADO", "table": 1}, {"name": "BENITO PACHECO", "table": 4}, {"name": "PATRICIA ELENA VANEGAS MARIN", "table": 3}, {"name": "CAMILO JOEL QUINTERO SUNE", "table": 13}, {"name": "ELISEO ADAIR SANCHEZ AYALA", "table": 13}, {"name": "INGRID NOELIA MOW CONTRERAS", "table": 13}, {"name": "JENIFFER JAQUELINE MARIN BARRIA", "table": 12}, {"name": "JESUS HUMBERTO SANCHEZ MADRID", "table": 13}, {"name": "LOURDESMABEL DELGADO", "table": 14}, {"name": "REYNOLD NATHANIEL PEREZ MORALES", "table": 14}, {"name": "RICHARD EDUARDO VILLAQUIRAN BONILLA", "table": 13}, {"name": "SUSANA VIANEY SANTAMARIA RODRIGUEZ", "table": 13}, {"name": "YESSENNITH YAURIXEL MARIN CEDENO", "table": 12}, {"name": "ZENAIDA YORGELIS PATINO BARRIA", "table": 13}, {"name": "RAFAEL ENRIQUE CEDENO MATA", "table": 10}, {"name": "MARIA DEL MILAGRO LARREATEGUI CORDOBA", "table": 9}, {"name": "CARMEN EUGENIA VALDES GONZALEZ DE MONTENEGRO", "table": 9}, {"name": "GABRIEL ALBERTO FUNG MANGRAVITA", "table": 9}, {"name": "MICHELLE DEL CARMEN CABALLERO SOTO DE BUENDIA", "table": 9}, {"name": "YANISEL DACIVEL CEBALLOS MORALES", "table": 10}, {"name": "PATRICIA LISBETH ARAUZ JUSTAVINO", "table": 9}, {"name": "JUAN IGNACIO KERBES ARBENOIZ", "table": 8}, {"name": "ROLANDO ISAAC CAMANO SANCHEZ", "table": 8}, {"name": "ELOY JESUS BATISTA CEDENO", "table": 8}, {"name": "PEDRO ANYELO SATURNO BRAVO", "table": 8}, {"name": "TATIANA GOMEZ OROZCO", "table": 8}, {"name": "BROWN CHAVEZ DE CRASTZ, CORZAIDA AMELIA", "table": 5}, {"name": "RELLAN CORELLA, MELISSA GRETTEL", "table": 6}, {"name": "GORD\u00d3N DUTARI DE TEJEDOR, F\u00c1TIMA LUCINA", "table": 5}, {"name": "WACHTER ANGEL, CHARL\u00cdN LISSETH", "table": 5}, {"name": "MOR\u00c1N MORALES, TANIA YETZEL", "table": 6}, {"name": "ROSALES PADILLA, VALERIA", "table": 6}, {"name": "FENG, XIAO ZHEN", "table": 6}, {"name": "ALMENDRAL ALMANZA DE AGUILAR, SEMIRAMIS NEREYDA", "table": 6}, {"name": "GARCIA, MARIETHIN EVAYDEE", "table": 5}, {"name": "CASTILLO DE GRACIA, MARISSA YARIELA", "table": 6}, {"name": "CEDENO VERGARA, LIBRADO ENRIQUE", "table": 5}, {"name": "SALAS, HERIBERTO", "table": 5}, {"name": "BARRIOS MARQU\u00cdNEZ DE VELARDE, EDITH DEL CARMEN", "table": 5}, {"name": "RODR\u00cdGUEZ GONZ\u00c1LEZ, LYZKA YOIDEL", "table": 5}, {"name": "PINTO BARBOSA, ROSALYN", "table": 6}, {"name": "VERGARA, VER\u00d3NICA DEL CARMEN", "table": 6}, {"name": "AGUILA OCA\u00d1A, JAIME ALBERTO", "table": 7}, {"name": "SAAVEDRA PRADO, IVIS YINIVA", "table": 7}, {"name": "BARBA, ERIC A", "table": 7}, {"name": "CORELLA, LUZ IBETH", "table": 7}, {"name": "GARCIA CAMPINES, GLADYS ESTER", "table": 7}, {"name": "RIQUELME SALAZAR, INOCENCIO", "table": 7}, {"name": "AGUILAR GONZ\u00c1LEZ, MAHALIA MICAELA", "table": 7}, {"name": "VARONA RUEDA, ISMAEL", "table": 7}, {"name": "RIVERA, MAGALLY IVONNE", "table": 14}, {"name": "MAHOLY VALESKA GIRALDEZ ABREGO", "table": 18}, {"name": "DIANA MILENA RINCON MURILLO", "table": 18}, {"name": "GERALDINE MAYGUALIDAS VILLEGAS", "table": 18}, {"name": "MICHELL MARIE COCHEZ CASSINO", "table": 18}, {"name": "JAMIR JOSE BRIAS TEJADA", "table": 19}, {"name": "ALFREDO ISABEL CASTILLO RODRIGUEZ", "table": 19}, {"name": "YAMISETH ARGELIS CRUZ MERCADO", "table": 19}, {"name": "ERICK ANTONIO SANTAMARIA MARTINEZ", "table": 8}, {"name": "DIGNA ELENA CAICEDO MORALES", "table": 19}, {"name": "MARIO ISAIAS HERRERA ALVAREZ", "table": 19}, {"name": "RAQUEL PORTUGAL", "table": 19}, {"name": "YALITZA ELIZABETH HERNANDEZ CANDANEDO", "table": 19}, {"name": "ABDIELA FELICHETTA MORALES DE BAYLESS", "table": 9}, {"name": "CARMELA AVOLESE MOLINE", "table": 9}, {"name": "MARIE MADELEINE DUCRUET NUNEZ", "table": 8}, {"name": "MARIO AUGUSTO ARRACERA MIRANDA", "table": 9}, {"name": "GIANPIERO PELLEGRINO", "table": 12}, {"name": "HAYDEE CASTRO VALDES", "table": 12}, {"name": "ARMANDO FRANCISCO ALFARO MORENO", "table": 12}, {"name": "JULIO ALEX HUERTA PORTAL", "table": 12}, {"name": "YARISEL EDITH RANGEL MEDINA", "table": 11}, {"name": "JAHDAI JARED JUSTIN VILLAR", "table": 11}, {"name": "JORGELYS GISSELLE CORTES PINEDA", "table": 11}, {"name": "ZELIDETH DEL CARMEN PEREZ LOPEZ", "table": 19}, {"name": "YESSICA RUSSELL SERRANO", "table": 14}, {"name": "MARIA MERCEDES HILL RUIZ", "table": 8}, {"name": "NACSUMY LISNETH TUNON MORENO", "table": 2}];
+
+function norm(s) {
+  return s.toUpperCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ').trim();
+}
+
+const input    = document.getElementById('search');
+const results  = document.getElementById('results');
+const clearBtn = document.getElementById('clearBtn');
+const overlay  = document.getElementById('overlay');
+const overlayName  = document.getElementById('overlayName');
+const overlayTable = document.getElementById('overlayTable');
+const overlayClose = document.getElementById('overlayClose');
+
+function highlight(text, query) {
+  const nText = norm(text), nQuery = norm(query);
+  const idx = nText.indexOf(nQuery);
+  if (idx === -1) return escHtml(text);
+  return escHtml(text.slice(0, idx))
+    + '<mark style="background:rgba(201,168,76,0.25);color:inherit;border-radius:3px;">'
+    + escHtml(text.slice(idx, idx + query.length))
+    + '</mark>'
+    + escHtml(text.slice(idx + query.length));
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function render(query) {
+  const q = norm(query.trim());
+  if (q.length < 2) { results.className = ''; results.innerHTML = ''; return; }
+
+  const hits = GUESTS.filter(g => norm(g.name).includes(q));
+  results.className = 'visible';
+
+  if (hits.length === 0) {
+    results.innerHTML = `
+      <div class="result-divider"></div>
+      <div class="result-empty">
+        <div class="emoji">🔍</div>
+        <p>No encontramos a <strong>"${escHtml(query.trim())}"</strong>.<br>Intenta con otro apellido o verifica la ortografía.</p>
+      </div>`;
+    return;
+  }
+
+  if (hits.length === 1) {
+    results.innerHTML = `
+      <div class="result-divider"></div>
+      <div class="result-single">
+        <div class="name">${highlight(hits[0].name, query.trim())}</div>
+        <div class="table-reveal">
+          <span class="table-label">Mesa</span>
+          <span class="table-number">${hits[0].table}</span>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const items = hits.map((g, i) => `
+    <div class="result-item" style="animation-delay:${i * 0.04}s" onclick="showDetail('${escHtml(g.name.replace(/'/g,"\\'"))}', ${g.table})">
+      <div class="item-name">${highlight(g.name, query.trim())}</div>
+      <div>
+        <div class="item-table">${g.table}</div>
+        <div class="item-table-label">mesa</div>
+      </div>
+    </div>`).join('');
+
+  results.innerHTML = `
+    <div class="result-divider"></div>
+    <div class="result-list">${items}</div>`;
+}
+
+function showDetail(name, table) {
+  overlayName.textContent = name;
+  overlayTable.textContent = table;
+  overlay.classList.add('open');
+}
+
+input.addEventListener('input', () => {
+  clearBtn.classList.toggle('visible', input.value.length > 0);
+  render(input.value);
+});
+
+clearBtn.addEventListener('click', () => {
+  input.value = '';
+  clearBtn.classList.remove('visible');
+  results.className = '';
+  results.innerHTML = '';
+  input.focus();
+});
+
+overlayClose.addEventListener('click', () => overlay.classList.remove('open'));
+overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+</script>
+</body>
+</html>
